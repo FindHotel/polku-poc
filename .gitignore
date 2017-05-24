@@ -1,0 +1,12 @@
+.env
+.lambda
+.tox
+.coverage
+__pycache__
+*.egg-info
+.cache
+*.pyc
+
+
+# Ignore deployment outputs
+*.outputs.yaml

@@ -1,0 +1,10 @@
+# test requirements
+pylama
+pytest
+pytest-cov
+tox
+mock
+pyyaml
+
+-r requirements-processor.txt
+-e .

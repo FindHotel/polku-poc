@@ -1,0 +1,20 @@
+_default:
+    # These settings may be overriden on specific stages
+    s3_termination_protection: yes
+    istream_termination_protection: yes
+    input_stream_shard_count: 1
+    output_stream_shard_count: 1
+    log_stream_shard_count: 1
+    redshift_buffer_mbs: 1
+    redshift_buffer_seconds: 60
+    processor_batch_size: 1000
+    processor_memory_size: 128
+    processor_timeout: 60
+    dynamodb_read: 5
+    dynamodb_write: 5
+    slack_channel: polku-poc
+
+PROD:
+    # This is the production environment
+    s3_termination_protection: yes
+    istream_termination_protection: yes

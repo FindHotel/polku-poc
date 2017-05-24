@@ -1,0 +1,132 @@
+---
+polkupoc:
+    description:
+        Polku's proof-of-concept
+
+    # These tags will be attached to all deployed AWS resources
+    tags:
+        "findhotel:project": "polku"
+        "findhotel:squad": "dataeng"
+
+
+    layers:
+        # Deploy a S3 bucket to store events. See ./layers/s3
+        - layer: s3
+          termination_protection: {{s3_termination_protection}}
+
+        # Deploy the input Kinesis streams. We deploy this stream on a separate
+        # layer so that we can set the termination protection only for this
+        # stream and not for other internal streams.
+        - layer: istream
+          layer_type: streams
+          termination_protection: {{istream_termination_protection}}
+          streams:
+            - name: InputStream
+              shard_count: {{input_stream_shard_count}}
+
+        # Other streams that we need
+        - layer: streams
+          layer_type: streams
+          streams:
+            - name: OutputStream
+              shard_count: {{output_stream_shard_count}}
+            - name: LogStream
+              shard_count: {{log_stream_shard_count}}
+
+        # A REST API that acts as a proxy to the input Kinesis stream
+        - layer: api
+          layer_type: kinesis-proxy
+          # The name of the Kinesis stream. In this case we use the same stream
+          # for all REST API endpoints (hook1 and hook2). You can also specify a
+          # different stream under an individual API resource path.
+          stream_name:
+            $layer_output:
+                layer_name: istream
+                output_name: InputStream
+          api_resources:
+            - path: server
+            - path: client
+
+        # Firehose delivery streams used to deliver events to S3 and Redshift.
+        - layer: firehose
+          layer_type: firehose
+          redshift_copy_options: EMPTYASNULL GZIP JSON 'auto'
+          s3_buffer_mbs: {{redshift_buffer_mbs}}
+          s3_buffer_seconds: {{redshift_buffer_seconds}}
+          s3_bucket_name:
+            $layer_output:
+                layer_name: s3
+                output_name: BucketName
+          redshift_host: {{__env.REDSHIFT_HOST}}
+          redshift_port: {{__env.REDSHIFT_PORT}}
+          redshift_username: {{__env.REDSHIFT_USER}}
+          redshift_password: {{__env.REDSHIFT_PWD}}
+          redshift_database: {{__env.REDSHIFT_DB}}
+          delivery_streams:
+              # We want all the raw input events delivered to S3
+              - name: InputDeliveryStream
+                s3_prefix: input/json/
+              # We want to deliver the backend events to a backend RS table 
+              - name: BackendDeliveryStream
+                s3_prefix: backend/json/
+                redshift_table: polku_poc_{{__context.stage.lower()}}.backend
+              # We want to deliver the client events to a client RS table
+              - name: ClientDeliveryStream
+                s3_prefix: client/json/
+                redshift_table: polku_poc_{{__context.stage.lower()}}.client
+
+        # AWS Lambda that processes incoming events
+        - layer: processor
+          layer_type: kinesis-processor
+          logs_destination_arn:
+            $layer_output:
+                layer_name: streams
+                output_name: LogStreamArn
+          logs_filter_pattern: INFO
+          dynamodb_capacity:
+            read: {{dynamodb_read}}
+            write: {{dynamodb_write}}
+          starting_position: LATEST
+          batch_size: {{processor_batch_size}}
+          memory_size: {{processor_memory_size}}
+          timeout: {{processor_timeout}}
+          # You can choose either python2.7 or python3.6
+          runtime: python3.6
+          variables:
+            SENTRY_DSN: {{__env.SENTRY_DSN}}
+          lambda_dependencies:
+            - polku_poc
+            - requirements-processor.txt
+          input:
+            kinesis_stream:
+                $layer_output:
+                    layer_name: istream
+                    output_name: InputStream
+          output:
+            # Deliver the input events to S3
+            - firehose_delivery_stream:
+                $layer_output:
+                    layer_name: firehose
+                    output_name: InputDeliveryStream
+
+            # Name all users!
+            - mapper: "polku_poc.processor:name_user"
+              filter: "polku_poc.processor:filter_backend"
+              kinesis_stream:
+                $layer_output:
+                    layer_name: streams
+                    output_name: OutputStream
+              firehose_delivery_stream:
+                $layer_output:
+                    layer_name: firehose
+                    output_name: BackendDeliveryStream
+            - mapper: "polku_poc.processor:name_user"
+              filter: "polku_poc.processor:filter_client"
+              kinesis_stream:
+                $layer_output:
+                    layer_name: streams
+                    output_name: OutputStream
+              firehose_delivery_stream:
+                $layer_output:
+                    layer_name: firehose
+                    output_name: ClientDeliveryStream
