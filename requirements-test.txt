@@ -6,5 +6,9 @@ tox
 mock
 pyyaml
 
+git+https://github.com/findhotel/analytics-python
+#git+https://github.com/findhotel/kinesisutils
+-e /Users/germangh/kinesisutils
+
 -r requirements-processor.txt
 -e .

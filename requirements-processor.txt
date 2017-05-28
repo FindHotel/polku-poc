@@ -1,2 +1,2 @@
-lambdautils
+lambdautils>=1.3.9
 names

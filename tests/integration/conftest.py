@@ -3,6 +3,7 @@
 from collections import namedtuple
 import os
 
+import analytics
 from boto3facade.exceptions import AwsError
 from humilis.environment import Environment
 import pytest
@@ -46,9 +47,34 @@ def environment(settings):
             env.delete()
 
 
+@pytest.yield_fixture(scope="session")
+def streams(environment):
+    """API Key of the kinesis-proxy layer."""
+    layers = [l for l in environment.layers if l.type=='streams']
+    outputs = {}
+    for layer in layers:
+        outputs.update(layer.outputs)
+    Streams = namedtuple("Streams", "input output log")
+    return Streams(*(outputs.get(o)
+                     for o in ["InputStream", "OutputStream", "LogStream"]))
+
+
+@pytest.yield_fixture(scope="session")
+def api_key(environment):
+    """API Key of the kinesis-proxy layer."""
+    return [l for l in environment.layers 
+            if l.type=='kinesis-proxy'][0].outputs["ApiKey"]
+
+
+@pytest.yield_fixture(scope="session")
+def api_root(environment, api_key):
+    """API Key of the kinesis-proxy layer."""
+    analytics.write_key = api_key
+    return [l for l in environment.layers 
+            if l.type=='kinesis-proxy'][0].outputs["RootResourceInvokeUrl"]
+
+
 def empty_bucket(bucket):
     """Empties a S3 bucket."""
     subprocess.call(["aws", "s3", "rm", "s3://{}/".format(bucket),
                     "--recursive"], stdout=subprocess.PIPE)
-
-

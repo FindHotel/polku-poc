@@ -39,8 +39,9 @@ setup(
         "humilis-streams",
         "humilis-firehose",
         "humilis-kinesis-proxy",
-        "humilis-kinesis-processor",
-        "humilis"],
+        "humilis-kinesis-processor>=1.0.9",
+        "humilis",
+        ],
     classifiers=[
         "Programming Language :: Python :: 3"]
 )

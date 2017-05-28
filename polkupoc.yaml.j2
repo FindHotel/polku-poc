@@ -8,9 +8,11 @@ polkupoc:
         "findhotel:project": "polku"
         "findhotel:squad": "dataeng"
 
-
     layers:
-        # Deploy a S3 bucket to store events. See ./layers/s3
+        # Deploy a S3 bucket to store events. Notice that this layer does not
+        # have a layer_type parameter. That's because this layer is not 
+        # provided by a plug-in but it's directly specified here using a 
+        # Cloudformation template. See ./layers/s3.
         - layer: s3
           termination_protection: {{s3_termination_protection}}
 
@@ -66,10 +68,10 @@ polkupoc:
               # We want all the raw input events delivered to S3
               - name: InputDeliveryStream
                 s3_prefix: input/json/
-              # We want to deliver the backend events to a backend RS table 
-              - name: BackendDeliveryStream
-                s3_prefix: backend/json/
-                redshift_table: polku_poc_{{__context.stage.lower()}}.backend
+              # We want to deliver the server events to a server RS table 
+              - name: ServerDeliveryStream 
+                s3_prefix: server/json/
+                redshift_table: polku_poc_{{__context.stage.lower()}}.server
               # We want to deliver the client events to a client RS table
               - name: ClientDeliveryStream
                 s3_prefix: client/json/
@@ -82,7 +84,8 @@ polkupoc:
             $layer_output:
                 layer_name: streams
                 output_name: LogStreamArn
-          logs_filter_pattern: INFO
+          # See AWS Cloudwatch logs filter patterns docs
+          logs_filter_pattern: WARNING
           dynamodb_capacity:
             read: {{dynamodb_read}}
             write: {{dynamodb_write}}
@@ -111,7 +114,7 @@ polkupoc:
 
             # Name all users!
             - mapper: "polku_poc.processor:name_user"
-              filter: "polku_poc.processor:filter_backend"
+              filter: "polku_poc.processor:is_server"
               kinesis_stream:
                 $layer_output:
                     layer_name: streams
@@ -119,9 +122,9 @@ polkupoc:
               firehose_delivery_stream:
                 $layer_output:
                     layer_name: firehose
-                    output_name: BackendDeliveryStream
+                    output_name: ServerDeliveryStream
             - mapper: "polku_poc.processor:name_user"
-              filter: "polku_poc.processor:filter_client"
+              filter: "polku_poc.processor:is_client"
               kinesis_stream:
                 $layer_output:
                     layer_name: streams

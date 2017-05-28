@@ -16,7 +16,7 @@ install: .env
 	$(PIP) install -e .
 
 # install dev dependencies
-dev: .env
+develop: .env
 	$(PIP) install -r requirements-test.txt
 
 # remove .env
@@ -45,6 +45,9 @@ update: install
 
 # destroy a deployment
 delete: install
+	aws s3 rm s3://`cat $(HUMILIS_ENV)-$(STAGE).outputs.yaml \
+			| grep BucketName | sed -e 's/BucketName: //' | tr -d ' '` \
+			--recursive
 	$(HUMILIS) delete \
 		--stage $(STAGE) \
 		--parameters $(PARAMETERS) \

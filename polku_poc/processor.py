@@ -10,31 +10,40 @@ logger.setLevel(logging.INFO)
 
 
 class TestHelper:
+    """
+    A helper for the unit test suite. It registers callables that are going to
+    act as filters or mappers so that their signatures can be tested.
+    """
     mappers = []
     filters = []
 
 
 def mapper(f):
+    """Register a mapper callable."""
     TestHelper.mappers.append(f)
     return f
 
 
 def filter(f):
+    """Register a filter callable."""
     TestHelper.filters.append(f)
     return f
 
 
 @mapper
 def name_user(message, _):
-    """Names all users."""
+    """Name all users."""
 
     event = message["event"]
     already_seen = get_state(event["userId"], namespace="users")
     if not already_seen:
         event["userName"] = names.get_full_name()
-        logger.info("{} -> {}".format(event["userId"], event["userName"]))
+        logger.warning("New user: {} -> {}".format(
+            event["userId"], event["userName"]))
         set_state(event["userId"], event["userName"], namespace="users")
     else:
+        logger.warning("Already seen user: {} -> {}".format(
+            event["userId"], already_seen))
         event["userName"] = already_seen
 
     return [event]
@@ -43,5 +52,12 @@ def name_user(message, _):
 @filter
 def is_server(message, _):
     """Select server events."""
-    ctx = message["event"]["context"]
+    ctx = message["context"]
     return ctx["resourcePath"] == "/server"
+
+
+@filter
+def is_client(message, _):
+    """Select client events."""
+    ctx = message["context"]
+    return ctx["resourcePath"] == "/client"
