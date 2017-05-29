@@ -1,6 +1,8 @@
 """Processing logic."""
 
+import json
 import logging
+
 import names
 
 from lambdautils.state import set_state, get_state
@@ -61,3 +63,12 @@ def is_client(message, _):
     """Select client events."""
     ctx = message["context"]
     return ctx["resourcePath"] == "/client"
+
+
+@mapper
+def notify_slack(message, _):
+    """Forward the incoming message to a Slack channel."""
+
+    logger.info(json.dumps(message, indent=4))
+
+

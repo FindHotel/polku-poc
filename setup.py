@@ -5,6 +5,7 @@ import codecs
 from setuptools import setup, find_packages
 
 from polku_poc import __version__, __author__
+from polku_poc.settings import config
 
 dirname = os.path.dirname(__file__)
 description = "Polku stream processing Proof-of-concept"
@@ -39,9 +40,14 @@ setup(
         "humilis-streams",
         "humilis-firehose",
         "humilis-kinesis-proxy",
-        "humilis-kinesis-processor>=1.0.9",
+        "humilis-kinesis-processor>=1.1.3",
         "humilis",
         ],
     classifiers=[
-        "Programming Language :: Python :: 3"]
+        "Programming Language :: Python :: 3"],
+    entry_points={
+        "console_scripts": [
+            "polkupoc = polku_poc.cli:main",
+        ]
+    }
 )

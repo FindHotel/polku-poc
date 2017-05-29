@@ -10,6 +10,9 @@ _default:
     processor_batch_size: 1000
     processor_memory_size: 128
     processor_timeout: 60
+    log_processor_batch_size: 1
+    log_processor_memory_size: 128
+    log_processor_timeout: 60
     dynamodb_read: 5
     dynamodb_write: 5
     slack_channel: polku-poc
