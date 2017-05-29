@@ -43,6 +43,7 @@ pyenv install 3.6.0b2
 
 ```
 make install
+. .env/bin/activate
 humilis configure --local
 ```
 
@@ -73,7 +74,7 @@ Note that you will need to manually create the `HUMILIS_BUCKET` S3 bucket before
 I have extracted the most important deployment parameters into a [parameters.yaml.j2][./parameters.yaml.j2] file. A brief explanation of the purpose of each parameter can be found in the comments embedded in the parameters file. You can edit the deployment parameters as you see fit. Then:
 
 ```bash
-make create STAGE=DEV
+polkupoc --stage DEV appy
 ```
 
 The command above will deploy to a _stage_ named `DEV`. You can have multiple parallel (identical) deployments by using a different deployment stage.
