@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 from polku_poc import __version__, __author__
 
 dirname = os.path.dirname(__file__)
-description = "Humilis plug-in to deploy a Lambda microservice"
+description = "Polku stream processing Proof-of-concept"
 
 try:
     import pypandoc
@@ -20,7 +20,7 @@ except(IOError, ImportError, RuntimeError):
         long_description = description
 
 setup(
-    name="humilis-poc",
+    name="polku-poc",
     include_package_data=True,
     package_data={
         "": ["*.j2", "*.yaml"]},
