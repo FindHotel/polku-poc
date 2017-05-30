@@ -6,7 +6,7 @@
 from sqlalchemy import (
     DateTime,
     Column,
-    Integer,
+    BigInteger,
     String,
 )
 
@@ -55,8 +55,8 @@ class Log(Base):
     __table_args__ = {"schema": SCHEMA}
 
     id = Column(String(128), primary_key=True)
-    log_group = Column(String(1024))
-    log_stream = Column(String(1024))
-    received_at = Column(DateTime)
-    timestamp = Column(DateTime)
+    timestamp = Column(BigInteger)
     message = Column(String(1024))
+    context_log_group = Column(String(1024))
+    context_log_stream = Column(String(1024))
+    context_received_at = Column(DateTime)

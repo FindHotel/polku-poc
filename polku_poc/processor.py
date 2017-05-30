@@ -1,6 +1,7 @@
 """Processing logic."""
 
 import copy
+from datetime import datetime
 from dateutil.parser import parse as parse_datetime
 import json
 import logging
@@ -84,7 +85,7 @@ def notify_slack(message, _):
 
 
 @mapper
-def extract_log_events(message, _):
+def extract_log_events(message, ctx):
     """Extract log events from AWS Cloudwatch Logs event."""
     message = camel_to_snake(message)
     log_events = message["log_events"]
@@ -92,7 +93,7 @@ def extract_log_events(message, _):
     out = []
     for ev in log_events:
         ev["context"] = copy.deepcopy(message)
-        out.append(flatten(ev))
+        out.append(prepare_for_redshift(ev, ctx))
     return out
 
 
@@ -102,9 +103,12 @@ def prepare_for_redshift(message, _):
     message = camel_to_snake(message)
     for ts_field in ["timestamp", "sent_at"]:
         # Convert timestamp to the format Redshift likes
-        message[ts_field] = parse_datetime(
-            message[ts_field]).strftime("%Y-%m-%d %H:%M:%S")
-    return [flatten(message)]
+        if ts_field not in message:
+            continue
+        if isinstance(message[ts_field], str):
+            message[ts_field] = parse_datetime(
+                message[ts_field]).strftime("%Y-%m-%d %H:%M:%S")
+    return flatten(message)
 
 
 def flatten(y):

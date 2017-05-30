@@ -174,5 +174,5 @@ polkupoc:
                 $layer_output:
                     layer_name: firehose
                     output_name: LogDeliveryStream
-              mapper: "polku_poc.processor.prepare_for_redshift"
+              mapper: "polku_poc.processor.extract_log_events"
             - mapper: "polku_poc.processor.notify_slack"

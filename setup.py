@@ -40,7 +40,7 @@ setup(
         "humilis-streams",
         "humilis-firehose",
         "humilis-kinesis-proxy",
-        "humilis-kinesis-processor>=1.1.3",
+        "humilis-kinesis-processor>=1.1.4",
         "humilis",
         ],
     classifiers=[
