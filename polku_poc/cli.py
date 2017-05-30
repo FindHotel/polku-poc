@@ -1,14 +1,20 @@
 """Command line interface."""
 
+import os
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    # Python 3.x
+    from configparser import ConfigParser
 
 import alembic.config
 import alembic.context
 from sqlalchemy.engine.url import URL
 import click
-
 from humilis.environment import Environment
+import shutil
 
-from polku_poc.settings import config
+from polku_poc.settings import config, PROJECT_PATH
 
 # Python 2.x compatibility
 try:
@@ -90,9 +96,12 @@ def polkupoc_alembic(ctx, args):
     """Migrate Redshift with Alembic."""
 
     alembic.context.sqlalchemy_url = str(URL(
-        host=os.env["REDSHIFT_HOST"], port=os.env["REDSHIFT_PORT"],
-        database=os.env["REDSHIFT_DB"], username=os.env["REDSHIFT_USER"],
-        password=os.env["REDSHIFT_PWD"], drivername="redshift+psycopg2"))
+        host=os.environ["REDSHIFT_HOST"],
+        port=os.environ["REDSHIFT_PORT"],
+        database=os.environ["REDSHIFT_DB"],
+        username=os.environ["REDSHIFT_USER"],
+        password=os.environ["REDSHIFT_PWD"],
+        drivername="redshift+psycopg2"))
     config_file = _make_stage_dir(ctx.obj["env"].stage.lower())
     args = ["-c", config_file] + list(args)
     alembic.config.main(prog="polkupoc alembic", argv=args)
@@ -107,7 +116,7 @@ def _make_stage_dir(stage):
 
     _make_env_file(dirname)
     _make_mako_file(dirname)
-    return _make_alembic_config()
+    return _make_alembic_config(stage)
 
 
 
@@ -116,7 +125,7 @@ def _make_env_file(targetdir):
     envfile = os.path.join(targetdir, "env.py")
     envfile_template = os.path.join(PROJECT_PATH, "migrations", "env.py")
     if not os.path.isfile(envfile):
-        copyfile(envfile_template, envfile)
+        shutil.copyfile(envfile_template, envfile)
 
 
 def _make_mako_file(targetdir):
@@ -124,10 +133,10 @@ def _make_mako_file(targetdir):
     mako = os.path.join(targetdir, "script.py.mako")
     mako_template = os.path.join(PROJECT_PATH, "migrations", "script.py.mako")
     if not os.path.isfile(mako):
-        copyfile(mako_template, mako)
+        shutil.copyfile(mako_template, mako)
 
 
-def _make_alembic_config():
+def _make_alembic_config(stage):
     """Make alembic.ini for a stage."""
     parser = ConfigParser()
     parser.read(os.path.join(PROJECT_PATH, "alembic.ini"))

@@ -12,11 +12,11 @@ This proof of concept implements the following streaming architecture:
 The architecture above implements an app that does the following:
 
 * Ingests events from two sources: `server` and `client`.
-* Translates the user IDs in the events coming from the server into user names
+* Translates the user IDs in all incoming events into user names
 * Delivers all `client` events to a table called `polku_poc.client` in Redshift.
 * Delivers all `server` events to a table called `polku_poc.server` in Redshift.
-* Logs when a user is named for the first time.
-* Forwards all log events to Slack.
+* Logs a warning when a user is named for the first time.
+* Forwards all warning log events to Slack.
 
 
 ## Prerequisites
@@ -78,6 +78,22 @@ polkupoc --stage DEV appy
 ```
 
 The command above will deploy to a _stage_ named `DEV`. You can have multiple parallel (identical) deployments by using a different deployment stage.
+
+Once the deployment has completed you will find the deployment outputs (things such as the name of the S3 bucket where events are delivered) in a file called `polkupoc-[STAGE]-outputs.yaml`.
+
+### Redshift migration
+
+There is one last step you need to take to have a fully functional app. You need to create the target tables in Redshift so that Firehose can deliver the relevant events to them. You do that by editing the models in [polku_poc/models/polkupoc.py](polku_poc/models/polkupoc.py) and then using Alembic to generate a migration script for you:
+
+```bash
+polkupoc --stage DEV alembic -- revision --autogenerate
+```
+
+Check that the migration script is correct, then apply the migration:
+
+```bash
+polkupoc --stage DEV alembic -- upgrade head
+```
 
 
 ## Contact

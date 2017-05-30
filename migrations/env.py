@@ -4,6 +4,7 @@ from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
 from polku_poc.models.base import metadata
+from polku_poc.settings import config as polku_config
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,16 +26,15 @@ target_metadata = metadata
 # ... etc.
 config.set_main_option("sqlalchemy.url", context.sqlalchemy_url)
 
-STAGE = os.environ["STAGE"].lower()
-VERSION_TABLE = "alembic_polku_poc_{}".format(STAGE)
+STAGE = polku_config.context["env"].stage.lower()
+VERSION_TABLE = "alembic_polkupoc_{}".format(STAGE)
 
 
 def include_object(object, name, type_, reflected, compare_to):
     if type_ == "table":
         # hack: do not conflict with the old Polku prod deployment. To be
         # removed once we shut down the old polku.
-        return object.schema != "polku_prod" \
-            and object.schema == "polku_" + STAGE
+        return object.schema == "polkupoc_" + STAGE
     else:
         return True
 

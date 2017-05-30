@@ -69,7 +69,6 @@ def api_key(environment):
 @pytest.yield_fixture(scope="session")
 def api_root(environment, api_key):
     """API Key of the kinesis-proxy layer."""
-    analytics.write_key = api_key
     return [l for l in environment.layers 
             if l.type=='kinesis-proxy'][0].outputs["RootResourceInvokeUrl"]
 

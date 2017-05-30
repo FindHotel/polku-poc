@@ -14,11 +14,11 @@ depends_on = ${repr(depends_on)}
 
 from alembic import op
 import sqlalchemy as sa
-from polku.settings import config
+from polku_poc.settings import config
 ${imports if imports else ""}
 
 def upgrade():
-    op.execute("CREATE SCHEMA IF NOT EXISTS polku_{};".format(config.context["env"].stage.lower()))
+    op.execute("CREATE SCHEMA IF NOT EXISTS polkupoc_{};".format(config.context["env"].stage.lower()))
     ${upgrades if upgrades else "pass"}
 
 

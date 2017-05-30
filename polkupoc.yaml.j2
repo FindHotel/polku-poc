@@ -71,15 +71,15 @@ polkupoc:
               # We want to deliver the server events to a server RS table 
               - name: ServerDeliveryStream 
                 s3_prefix: server/json/
-                redshift_table: polku_poc_{{__context.stage.lower()}}.server
+                redshift_table: polkupoc_{{__context.stage.lower()}}.server
               # We want to deliver the client events to a client RS table
               - name: ClientDeliveryStream
                 s3_prefix: client/json/
-                redshift_table: polku_poc_{{__context.stage.lower()}}.client
+                redshift_table: polkupoc_{{__context.stage.lower()}}.client
               # We want to deliver the selected log events to a RS table
               - name: LogDeliveryStream
                 s3_prefix: log/json/
-                redshift_table: polku_poc_{{__context.stage.lower()}}.log
+                redshift_table: polkupoc_{{__context.stage.lower()}}.log
 
         # AWS Lambda that processes incoming events
         - layer: processor
@@ -111,7 +111,8 @@ polkupoc:
                     output_name: InputStream
           output:
             # Deliver the input events to S3
-            - firehose_delivery_stream:
+            - mapper: "polku_poc.processor.prepare_for_redshift"
+              firehose_delivery_stream:
                 $layer_output:
                     layer_name: firehose
                     output_name: InputDeliveryStream
@@ -173,4 +174,5 @@ polkupoc:
                 $layer_output:
                     layer_name: firehose
                     output_name: LogDeliveryStream
+              mapper: "polku_poc.processor.prepare_for_redshift"
             - mapper: "polku_poc.processor.notify_slack"
