@@ -81,6 +81,18 @@ The command above will deploy to a _stage_ named `DEV`. You can have multiple pa
 
 Once the deployment has completed you will find the deployment outputs (things such as the name of the S3 bucket where events are delivered) in a file called `polkupoc-[STAGE]-outputs.yaml`.
 
+### Testing 
+Unit Test:
+
+```
+make test
+```
+
+Integration Test:
+
+```
+make testi
+```
 ### Redshift migration
 
 There is one last step you need to take to have a fully functional app. You need to create the target tables in Redshift so that Firehose can deliver the relevant events to them. You do that by editing the models in [polku_poc/models/polkupoc.py](polku_poc/models/polkupoc.py) and then using Alembic to generate a migration script for you:
